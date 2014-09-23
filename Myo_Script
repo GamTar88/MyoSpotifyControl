@@ -1,6 +1,3 @@
--- SpotifyControlv2
--- Myo Script to allow the Thalmic Myo Armband to send music commands through the Myo Connect app to control Spotify
-
 scriptId = 'com.ajc292.myoDev.SpotifyControlv2'
 
 function playpause()
@@ -27,8 +24,8 @@ function resetFist()
     fistMade = false
     referenceRoll = myo.getRoll()
     currentRoll = referenceRoll
-  	myo.keyboard("up_arrow","up")
-    myo.keyboard("down_arrow","up")
+  	myo.keyboard("up_arrow","up", "command")
+    myo.keyboard("down_arrow","up", "command")
 end
 
 -- Makes use of myo.getArm() to swap wave out and wave in when the armband is being worn on
@@ -55,7 +52,7 @@ function extendUnlock()
 end
 
 -- All timeouts in milliseconds
-UNLOCKED_TIMEOUT = 5000               -- Time since last activity before we lock
+UNLOCKED_TIMEOUT = 3000               -- Time since last activity before we lock
 
 function onPoseEdge(pose, edge)
 
@@ -63,7 +60,6 @@ function onPoseEdge(pose, edge)
         if edge == "off" then
             -- Unlock when pose is released in case the user holds it for a while.
             unlock()
-
         elseif edge == "on" and not unlocked then
             -- Vibrate twice on unlock.
             -- We do this when the pose is made for better feedback.
@@ -103,15 +99,21 @@ function onPoseEdge(pose, edge)
             	Forward()
             end
 
-            if pose ~= "fist" then -- Reset call
-                resetFist()
+            if not pose == "fist" and edge == "on" then -- Reset call
+                fistMade = false
+				resetFist()
             end
 
             -- Initial burst and vibrate
             myo.vibrate("short")
             extendUnlock()
+		    
         end
-    end
+	end
+	
+	if not (pose == "fist" and edge == "on") then
+		resetFist()
+	end
 end
 
 function onPeriodic()
@@ -125,6 +127,7 @@ function onPeriodic()
         -- Activity will update unlockedSince, see extendUnlock() above.
         if (now - unlockedSince) > UNLOCKED_TIMEOUT then
             unlocked = false
+			myo.vibrate("short")
         end
     end
 
@@ -137,9 +140,9 @@ function onPeriodic()
     if unlocked and fistMade then -- Moves page when fist is held and Myo is rotated
         extendUnlock()
         subtractive = currentRoll - referenceRoll
-        if subtractive > 0.2  then
+        if subtractive > 0.3  then
             volUp()
-        elseif subtractive < -0.2 then
+        elseif subtractive < -0.3 then
             volDown() 
         end
     end
@@ -148,16 +151,21 @@ end
 
 
 function onForegroundWindowChange(app, title)
-    -- Here we decide if we want to control the new active app.
-	local wantActive = false
-	
-	if platfrom =="MacOS" then
-    	if app == "com.spotify.client" then
-    		wantActive = true
-			activeApp = "Spotify"
-		end
-	end
-    
+    local wantActive = false
+    activeApp = ""
+
+    if platform == "MacOS" then
+        if app == "com.spotify.client" then
+            -- Spotify on MacOS
+            wantActive = true
+            activeApp = "Spotify"
+        
+        end
+    elseif platform == "Windows" then
+        -- Spotify on Windows
+        wantActive = string.match(title, "SpotifyMainWindow")
+        activeApp = "Spotify"
+    end
     return wantActive
 end
 
@@ -168,6 +176,10 @@ end
 
 function onActiveChange(isActive)
     if not isActive then
-        unlocked = false
+		myo.vibrate("short")
+		unlocked = false
+    elseif isActive then
+		myo.vibrate("short")
+		myo.vibrate("short")
     end
 end
