@@ -1,0 +1,18 @@
+1) Download the file and unzip it (or copy the code into a lua capable editor)
+2) Start the Myo Connect app on your computer.
+3) On Mac (not sure for windows) click on the toolbar icon for the Myo connect app and scroll down to "Myo Scripts Manager."
+4) Click "+ Add Script"
+5) Navigate to the location of the unzipped file
+6) Open Spotify
+7) Shake and bake
+
+
+Gestures Currently Supported (and the respective commands):
+
+Fingers Spread :: Play/Pause
+Swipe Left :: Previous Track
+Swipe Right :: Next Track
+
+Fist(hold):
+    Roll RIGHT :: Volume Up
+    Roll LEFT :: Volume Down
